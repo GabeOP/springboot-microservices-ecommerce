@@ -7,6 +7,8 @@ import com.gabriel.mscart.models.entities.Cart;
 import com.gabriel.mscart.models.entities.Item;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,7 +34,7 @@ public class CartService {
             .reduce(0.0, (x,y) -> x + y);
   }
 
-  public void addItems(ItemDTO itemdto) {
+  public ResponseEntity<String> addItems(ItemDTO itemdto) {
     Product product = productFeignClient.findByName(itemdto.getName()).getBody();
 
     try {
@@ -40,8 +42,7 @@ public class CartService {
       itemdto.setUnitPrice(product.getPrice());
 
       if(product.getStock() == 0) {
-        System.out.println("Sem estoque");
-        return;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("[ERROR] Empty stock.");
       }
 
       for (Item obj : cart.getItemsList()) {
@@ -64,6 +65,8 @@ public class CartService {
     } catch (Exception ex) {
       System.out.println(ex.getMessage());
     }
+
+    return ResponseEntity.ok("item successfully added to cart.");
   }
 
 }

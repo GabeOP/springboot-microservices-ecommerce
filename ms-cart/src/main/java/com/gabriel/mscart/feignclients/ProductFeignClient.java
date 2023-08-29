@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Component
-@FeignClient(name = "ms-product", url= "localhost:8001", path="/product")
+@FeignClient(name = "ms-product", path="/product")
 public interface ProductFeignClient {
 
   @GetMapping(value = "/{name}")

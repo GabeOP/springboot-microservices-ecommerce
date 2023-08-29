@@ -6,14 +6,16 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ms-product" />
         <module name="ms-cart" />
         <module name="ms-eureka-server" />
+        <module name="ms-api-gateway" />
+        <module name="ms-product" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="ms-api-gateway" options="-parameters" />
       <module name="ms-cart" options="-parameters" />
       <module name="ms-eureka-server" options="-parameters" />
       <module name="ms-product" options="-parameters" />

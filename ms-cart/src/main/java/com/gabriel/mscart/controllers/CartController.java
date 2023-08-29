@@ -1,5 +1,6 @@
 package com.gabriel.mscart.controllers;
 
+import com.gabriel.mscart.dto.ItemDTO;
 import com.gabriel.mscart.models.entities.Item;
 import com.gabriel.mscart.services.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class CartController {
   }
 
   @PostMapping
-  public void addItem(@RequestBody Item item) {
-    service.addItems(item);
+  public void addItem(@RequestBody ItemDTO itemdto) {
+    service.addItems(itemdto);
   }
 }

@@ -1,9 +1,11 @@
 package com.gabriel.mscart.services;
 
+import com.gabriel.mscart.dto.ItemDTO;
 import com.gabriel.mscart.feignclients.ProductFeignClient;
 import com.gabriel.mscart.models.Product;
 import com.gabriel.mscart.models.entities.Cart;
 import com.gabriel.mscart.models.entities.Item;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,9 @@ import java.util.List;
 
 @Service
 public class CartService {
+
+  @Autowired
+  ModelMapper modelMapper;
 
   @Autowired
   private Cart cart;
@@ -27,25 +32,33 @@ public class CartService {
             .reduce(0.0, (x,y) -> x + y);
   }
 
-  public void addItems(Item item) {
-    Product product = productFeignClient.findByName(item.getName()).getBody();
+  public void addItems(ItemDTO itemdto) {
+    Product product = productFeignClient.findByName(itemdto.getName()).getBody();
 
     try {
       boolean itemFound = false;
+      itemdto.setUnitPrice(product.getPrice());
+
+      if(product.getStock() == 0) {
+        System.out.println("Sem estoque");
+        return;
+      }
 
       for (Item obj : cart.getItemsList()) {
-        if (obj.equals(item)) {
-          obj.setQuantity(obj.getQuantity() + item.getQuantity());
-          product.setStock(product.getStock() - item.getQuantity());
+        if (obj.getName().equals(itemdto.getName())) {
+          obj.setQuantity(obj.getQuantity() + itemdto.getQuantity());
+          product.setStock(product.getStock() - itemdto.getQuantity());
+          itemdto.setUnitPrice(product.getPrice());
           itemFound = true;
           break;
         }
       }
 
       if (!itemFound) {
-        product.setStock(product.getStock() - item.getQuantity());
-        cart.addItem(item);
+        product.setStock(product.getStock() - itemdto.getQuantity());
+        cart.addItem(modelMapper.map(itemdto, Item.class));
       }
+
 
       productFeignClient.editProduct(product);
     } catch (Exception ex) {

@@ -38,4 +38,10 @@ public class ProductController {
             .status(HttpStatus.CREATED)
             .body("Product created successfully.");
   }
+
+  @PutMapping
+  public ResponseEntity<String> editProduct(@RequestBody Product obj) {
+    service.editProduct(obj);
+    return ResponseEntity.ok("Editado com sucesso.");
+  }
 }

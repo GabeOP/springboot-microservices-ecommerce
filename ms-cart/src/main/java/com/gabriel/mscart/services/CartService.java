@@ -1,6 +1,7 @@
 package com.gabriel.mscart.services;
 
 import com.gabriel.mscart.feignclients.ProductFeignClient;
+import com.gabriel.mscart.models.Product;
 import com.gabriel.mscart.models.entities.Cart;
 import com.gabriel.mscart.models.entities.Item;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +29,15 @@ public class CartService {
 
   public void addItems(Item item) {
 
-    //Product product = productFeignClient.findByName(item.getName()).getBody();
+    Product product = productFeignClient.findByName(item.getName()).getBody();
 
     try{
-      //if(product.getName().equals(item.getName()))
-        cart.addItem(item);
-    }catch(NullPointerException ex){
+      cart.addItem(item);
+      product.setName(item.getName());
+      product.setStock(product.getStock() - item.getQuantity());
+      productFeignClient.editProduct(product);
+
+    }catch(Exception ex){
       System.out.println(ex.getMessage());
     }
 

@@ -24,4 +24,10 @@ public class ProductService {
   public void createProduct(Product product) {
     repository.save(product);
   }
+
+  public void editProduct(Product obj) {
+    Product product = repository.findByName(obj.getName());
+    product.setStock(obj.getStock());
+    repository.save(product);
+  }
 }

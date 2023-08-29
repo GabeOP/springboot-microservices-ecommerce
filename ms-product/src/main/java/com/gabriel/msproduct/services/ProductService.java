@@ -27,7 +27,11 @@ public class ProductService {
 
   public void editProduct(Product obj) {
     Product product = repository.findByName(obj.getName());
-    product.setStock(obj.getStock());
-    repository.save(product);
+    try{
+      product.setStock(obj.getStock());
+      repository.save(product);
+    }catch(Exception ex) {
+      System.out.println(ex.getMessage() + "Empty stock.");
+    }
   }
 }

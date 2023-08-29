@@ -1,6 +1,7 @@
 package com.gabriel.msproduct.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity(name = "tb_product")
 public class Product {
@@ -13,9 +14,11 @@ public class Product {
   private String name;
 
   @Column(nullable = false)
+  @PositiveOrZero
   private double price;
 
   @Column(nullable = false)
+  @PositiveOrZero
   private int stock;
 
   public Product() {}

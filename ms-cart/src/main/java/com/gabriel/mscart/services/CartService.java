@@ -23,23 +23,34 @@ public class CartService {
 
   public double totalPrice() {
     return cart.getItemsList().stream()
-            .map(price -> price.getUnitPrice())
+            .map(obj -> obj.getUnitPrice() * obj.getQuantity())
             .reduce(0.0, (x,y) -> x + y);
   }
 
   public void addItems(Item item) {
-
     Product product = productFeignClient.findByName(item.getName()).getBody();
 
-    try{
-      cart.addItem(item);
-      product.setName(item.getName());
-      product.setStock(product.getStock() - item.getQuantity());
-      productFeignClient.editProduct(product);
+    try {
+      boolean itemFound = false;
 
-    }catch(Exception ex){
+      for (Item obj : cart.getItemsList()) {
+        if (obj.equals(item)) {
+          obj.setQuantity(obj.getQuantity() + item.getQuantity());
+          product.setStock(product.getStock() - item.getQuantity());
+          itemFound = true;
+          break;
+        }
+      }
+
+      if (!itemFound) {
+        product.setStock(product.getStock() - item.getQuantity());
+        cart.addItem(item);
+      }
+
+      productFeignClient.editProduct(product);
+    } catch (Exception ex) {
       System.out.println(ex.getMessage());
     }
-
   }
+
 }

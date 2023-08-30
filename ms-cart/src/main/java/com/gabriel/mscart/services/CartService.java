@@ -39,30 +39,16 @@ public class CartService {
     Product product = reqFindByNameProduct(itemdto);
 
     try {
-      boolean itemFound = false;
 
       //Para setar um preço no itemDTO que será mostrado no retorno.
       itemdto.setUnitPrice(product.getPrice());
 
-      if(product.getStock() == 0) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("[ERROR] Empty stock.");
+      if(product.getStock() == 0 || itemdto.getQuantity() > product.getStock()) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("[ERROR] Insufficient stock for the requested quantity.");
       }
 
-      for (Item obj : cart.getItemsList()) {
-        //Para verificar cada item já existente no carrinho e se existir, somar com a quantidade atual.
-        if (obj.getName().equals(itemdto.getName())) {
-          obj.setQuantity(obj.getQuantity() + itemdto.getQuantity());
-
-          //método que atualiza o estoque na variavel product que contem informaçoes vinda do microserviço Product.
-          //Envia itemDTO para dar GET na qtd solicitada e product para dar GET e SET na variavel product.
-          stockUpdate(itemdto, product);
-
-          itemFound = true;
-          break;
-        }
-      }
-
-      if (!itemFound) {
+      boolean check = checkIfExistsItemInCart(itemdto, product);
+      if(!check) {
         stockUpdate(itemdto, product);
         cart.addItem(modelMapper.map(itemdto, Item.class));
       }
@@ -75,6 +61,25 @@ public class CartService {
     }
 
     return ResponseEntity.ok("item successfully added to cart.");
+  }
+
+  private boolean checkIfExistsItemInCart(ItemDTO itemdto, Product product) {
+    boolean itemFound = false;
+
+    for (Item obj : cart.getItemsList()) {
+      //Para verificar cada item já existente no carrinho e se existir, somar com a quantidade atual.
+      if (obj.getName().equals(itemdto.getName())) {
+        obj.setQuantity(obj.getQuantity() + itemdto.getQuantity());
+
+        //método que atualiza o estoque na variavel product que contem informaçoes vinda do microserviço Product.
+        //Envia itemDTO para dar GET na qtd solicitada e product para dar GET e SET na variavel product.
+        stockUpdate(itemdto, product);
+
+        itemFound = true;
+        break;
+      }
+    }
+    return itemFound;
   }
 
   private Product reqFindByNameProduct(ItemDTO itemdto) {

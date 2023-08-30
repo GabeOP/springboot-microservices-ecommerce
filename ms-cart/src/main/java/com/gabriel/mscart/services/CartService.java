@@ -35,10 +35,13 @@ public class CartService {
   }
 
   public ResponseEntity<String> addItems(ItemDTO itemdto) {
-    Product product = productFeignClient.findByName(itemdto.getName()).getBody();
+
+    Product product = reqFindByNameProduct(itemdto);
 
     try {
       boolean itemFound = false;
+
+      //Para setar um preço no itemDTO que será mostrado no retorno.
       itemdto.setUnitPrice(product.getPrice());
 
       if(product.getStock() == 0) {
@@ -46,22 +49,27 @@ public class CartService {
       }
 
       for (Item obj : cart.getItemsList()) {
+        //Para verificar cada item já existente no carrinho e se existir, somar com a quantidade atual.
         if (obj.getName().equals(itemdto.getName())) {
           obj.setQuantity(obj.getQuantity() + itemdto.getQuantity());
-          product.setStock(product.getStock() - itemdto.getQuantity());
-          itemdto.setUnitPrice(product.getPrice());
+
+          //método que atualiza o estoque na variavel product que contem informaçoes vinda do microserviço Product.
+          //Envia itemDTO para dar GET na qtd solicitada e product para dar GET e SET na variavel product.
+          stockUpdate(itemdto, product);
+
           itemFound = true;
           break;
         }
       }
 
       if (!itemFound) {
-        product.setStock(product.getStock() - itemdto.getQuantity());
+        stockUpdate(itemdto, product);
         cart.addItem(modelMapper.map(itemdto, Item.class));
       }
 
-
+      //Requisição PUT ao microserviço Produto.
       productFeignClient.editProduct(product);
+
     } catch (Exception ex) {
       System.out.println(ex.getMessage());
     }
@@ -69,4 +77,10 @@ public class CartService {
     return ResponseEntity.ok("item successfully added to cart.");
   }
 
+  private Product reqFindByNameProduct(ItemDTO itemdto) {
+    return productFeignClient.findByName(itemdto.getName()).getBody();
+  }
+  private void stockUpdate(ItemDTO itemdto, Product product) {
+    product.setStock(product.getStock() - itemdto.getQuantity());
+  }
 }

@@ -55,7 +55,7 @@ public class CartService {
       }
 
       //Chama o método que dá update na variável product.
-      stockUpdate(itemdto, product);
+      subtractFromStockWhenAddItemToCart(itemdto, product);
 
       //E finalmente a requisição PUT ao microserviço Produto.
       productFeignClient.editProduct(product);
@@ -63,6 +63,18 @@ public class CartService {
       System.out.println(ex.getMessage());
     }
     return ResponseEntity.ok("item successfully added to cart.");
+  }
+
+  public void deleteItem(ItemDTO itemdto) {
+    Product product = reqFindByNameProduct(itemdto);
+    Item check = checkIfExistsItemInCartByName(itemdto);
+
+    if(check != null) {
+      cart.deleteItem(modelMapper.map(itemdto, Item.class));
+      sumToStockWhenRemoveItemFromCart(itemdto, product);
+    }
+
+    productFeignClient.editProduct(product);
   }
 
   private Item checkIfExistsItemInCartByName(ItemDTO itemdto) {
@@ -81,7 +93,10 @@ public class CartService {
     return productFeignClient.findByName(itemdto.getName()).getBody();
   }
 
-  private void stockUpdate(ItemDTO itemdto, Product product) {
+  private void subtractFromStockWhenAddItemToCart (ItemDTO itemdto, Product product) {
     product.setStock(product.getStock() - itemdto.getQuantity());
+  }
+  private void sumToStockWhenRemoveItemFromCart (ItemDTO itemdto, Product product) {
+    product.setStock(product.getStock() + itemdto.getQuantity());
   }
 }

@@ -42,6 +42,10 @@ public class Cart {
     itemsList.add(item);
   }
 
+  public void deleteItem(Item item) {
+    itemsList.remove(item);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

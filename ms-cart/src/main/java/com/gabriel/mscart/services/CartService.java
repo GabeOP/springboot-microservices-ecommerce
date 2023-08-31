@@ -35,11 +35,9 @@ public class CartService {
   }
 
   public ResponseEntity<String> addItems(ItemDTO itemdto) {
-
     Product product = reqFindByNameProduct(itemdto);
 
     try {
-
       //Para setar um preço no itemDTO que será mostrado no retorno.
       itemdto.setUnitPrice(product.getPrice());
 
@@ -47,35 +45,32 @@ public class CartService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("[ERROR] Insufficient stock for the requested quantity.");
       }
 
-      boolean check = checkIfExistsItemInCart(itemdto, product);
-      if(!check) {
-        stockUpdate(itemdto, product);
+      Item check = checkIfExistsItemInCartByName(itemdto);
+      if(check == null) {
         cart.addItem(modelMapper.map(itemdto, Item.class));
       }
 
-      //Requisição PUT ao microserviço Produto.
-      productFeignClient.editProduct(product);
+      if(check != null) {
+        check.setQuantity(check.getQuantity() + itemdto.getQuantity());
+      }
 
+      //Chama o método que dá update na variável product.
+      stockUpdate(itemdto, product);
+
+      //E finalmente a requisição PUT ao microserviço Produto.
+      productFeignClient.editProduct(product);
     } catch (Exception ex) {
       System.out.println(ex.getMessage());
     }
-
     return ResponseEntity.ok("item successfully added to cart.");
   }
 
-  private boolean checkIfExistsItemInCart(ItemDTO itemdto, Product product) {
-    boolean itemFound = false;
+  private Item checkIfExistsItemInCartByName(ItemDTO itemdto) {
+    Item itemFound = null;
 
     for (Item obj : cart.getItemsList()) {
-      //Para verificar cada item já existente no carrinho e se existir, somar com a quantidade atual.
       if (obj.getName().equals(itemdto.getName())) {
-        obj.setQuantity(obj.getQuantity() + itemdto.getQuantity());
-
-        //método que atualiza o estoque na variavel product que contem informaçoes vinda do microserviço Product.
-        //Envia itemDTO para dar GET na qtd solicitada e product para dar GET e SET na variavel product.
-        stockUpdate(itemdto, product);
-
-        itemFound = true;
+        itemFound = obj;
         break;
       }
     }
@@ -85,6 +80,7 @@ public class CartService {
   private Product reqFindByNameProduct(ItemDTO itemdto) {
     return productFeignClient.findByName(itemdto.getName()).getBody();
   }
+
   private void stockUpdate(ItemDTO itemdto, Product product) {
     product.setStock(product.getStock() - itemdto.getQuantity());
   }
